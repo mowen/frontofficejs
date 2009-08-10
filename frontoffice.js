@@ -8,6 +8,7 @@ var ACTIVITY_PAGE_CLASS = "activity-page";
 $(document).ready(
   function () {
     ACTIVITY_DATA = new ActivityData("ENVPUBSR01.xml");
+    ACTIVITY_DATA.addSimpleRulesToComplexRules();
     ACTIVITY_DATA.displayAll();
     $("#tabs").tabs();
     $("#visibility-table").selectable();
@@ -132,6 +133,19 @@ ActivityData.prototype = {
     }
   },
 
+  addSimpleRulesToComplexRules: function() {
+    var visibilityRules = ACTIVITY_DATA.visibilityRules;
+
+    for (var ruleId in visibilityRules) {
+      var rule = visibilityRules[ruleId];
+      if (rule.RulesCode != undefined) {
+	var complexRuleParser = new ComplexRuleParser(rule.RulesCode);
+	rule.RulesDescription = complexRuleParser.parse();
+	rule.simpleRules = complexRuleParser.simpleRules;
+      }
+    }
+  },
+
   _visibilityRuleByName: function(ruleName) {
     for (var ruleId in this.visibilityRules) {
       if (this.visibilityRules[ruleId].RuleName == ruleName)
@@ -214,16 +228,10 @@ function ComplexVisibilityRule(rule) {
   this.RuleName = rule.RulesMasterName;
   this.RulesId = rule.RulesMasterId;
   this.RulesCode = rule.RulesMasterCode;
-  this.RulesDescription = rule.RulesMasterDescription;
   this.controls = new Array();
-  this.simpleRules = new Array();
 }
 
 ComplexVisibilityRule.prototype = {
-
-  addSimpleRule: function(simpleRule) {
-    this.simpleRules[simpleRule.RulesId.toString()] = simpleRule;
-  },
 
   addControl: function(control) {
     this.controls.push(control);
@@ -241,11 +249,7 @@ ComplexVisibilityRule.prototype = {
   },
 
   emitRuleDescription: function() {
-    var parser = new ComplexRuleParser(this.RulesCode);
-    var complexRuleDescription = parser.parse();
-    complexRuleDescription = complexRuleDescription.replace("&&", " AND ", "g"); // "g" means replace globally
-    complexRuleDescription = complexRuleDescription.replace("||", " OR ", "g");
-    return complexRuleDescription;
+    return this.RulesDescription;
   },
 
   _emitControlsHtml: function() {
@@ -271,18 +275,18 @@ ComplexVisibilityRule.prototype = {
   },
 
   _childMatchesSearchTerm: function(searchTerm) {
-    // TODO: this.simpleRules isn't being initialized at the moment, need to use
-    // ComplexRuleParser to get a list of children for the Complex Rule.
-    if (this.simpleRules.length == 0) {
-      return false;
-    }
-    else {
-      for (var simpleRuleId in this.simpleRules) {
-	if (this.simpleRules[simpleRuleId].matchesSearchTerm(searchTerm)) {
-	  return true;
-	}
+    for (var simpleRuleId in this.simpleRules) {
+      if (this.simpleRules[simpleRuleId].matchesSearchTerm(searchTerm)) {
+	return true;
       }
     }
+
+    for (var i=0; i < this.controls.length; i++) {
+      if (this.controls[i].ControlName.isIncrementalMatch(searchTerm)) {
+	return true;
+      }
+    }
+
     return false;
   }
 
@@ -294,6 +298,7 @@ function ComplexRuleParser(complexRuleDescription) {
   this.ruleDescription = complexRuleDescription;
   this.expandedDescription = "";
   this.pos = 0;
+  this.simpleRules = new Array();
 }
 
 ComplexRuleParser.prototype = {
@@ -312,9 +317,13 @@ ComplexRuleParser.prototype = {
 	}
 	simpleRule = ACTIVITY_DATA.visibilityRules[simpleRuleId];
 	this.expandedDescription += simpleRule.emitRuleDescription();
+	this.simpleRules[simpleRuleId] = simpleRule;
 	simpleRuleId = "";
       }
     }
+
+    this.expandedDescription = this.expandedDescription.replace("&&", " AND ", "g"); // "g" means replace globally
+    this.expandedDescription = this.expandedDescription.replace("||", " OR ", "g");
 
     return this.expandedDescription;
   },
