@@ -1,0 +1,5 @@
+*.xml
+*.doc
+*.zip
+jquery-ui.custom/index.html
+jquery-ui.custom/development-bundle/
