@@ -7,7 +7,7 @@ var ACTIVITY_PAGE_CLASS = "activity-page";
 // Document ready
 $(document).ready(
   function () {
-    ACTIVITY_DATA = new ActivityData("ENVPUBSR01.xml");
+    ACTIVITY_DATA = new ActivityData("ENVHOUSE01.xml");
     ACTIVITY_DATA.addSimpleRulesToComplexRules();
     ACTIVITY_DATA.displayAll();
     $("#tabs").tabs();
@@ -28,6 +28,7 @@ function ActivityData(xmlFilename) {
   this._addControlsToVisibilityRules();
 }
 
+// TODO: Implement eachVisibilityRule(func) and eachControl(func) Visitor functions.
 ActivityData.prototype = {
 
   displayAll: function() {
@@ -214,12 +215,23 @@ SimpleVisibilityRule.prototype = {
   matchesSearchTerm: function(searchTerm) {
     if (this.RulesId.isIncrementalMatch(searchTerm) ||
 	this.RuleName.isIncrementalMatch(searchTerm) ||
-	this.ControlName.isIncrementalMatch(searchTerm)) {
+	this.ControlName.isIncrementalMatch(searchTerm) ||
+        this._controlMatchesSearchTerm(searchTerm)) {
       return true;
     }
     else {
       return false;
     }
+  },
+
+  _controlMatchesSearchTerm: function(searchTerm) {
+    for (var i=0; i < this.controls.length; i++) {
+      if (this.controls[i].ControlName.isIncrementalMatch(searchTerm)) {
+	return true;
+      }
+    }
+
+    return false;
   }
 
 };
