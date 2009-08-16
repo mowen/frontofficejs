@@ -39,6 +39,7 @@ ActivityData.prototype = {
 
   liveSearch: function(searchTerm) {
     this._searchVisibility(searchTerm);
+    this._searchFormDefinition(searchTerm);
   },
 
   _searchVisibility: function(searchTerm) {
@@ -55,7 +56,17 @@ ActivityData.prototype = {
   },
 
   _searchFormDefinition: function(searchTerm) {
-    // Need to show or hide each individual element when we do the check
+    this.formDefinition.eachTable(
+      function(table) {
+	var tableName = table.name;
+	var element = $("#" + tableName);
+	if (tableName.isIncrementalMatch(searchTerm)) {
+	  element.parent().show();
+	}
+	else {
+	  element.parent().hide();
+	}
+      });
   },
 
   _displayHeader: function() {
@@ -386,6 +397,16 @@ FormDefinition.prototype = {
     return pages;
   },
 
+  eachTable: function(func) {
+    for (var pageId in this.pages) {
+      var page = this.pages[pageId];
+      for (var tableId in page.children) {
+	var table = page.children[tableId];
+	func(table);
+      }
+    }
+  },
+
   displayPages: function() {
     var page;
     if (this.pages.length != undefined) {
@@ -444,7 +465,7 @@ Control.prototype = {
 
     var visibilityRule = ACTIVITY_DATA._visibilityRuleByName(this.visibilityRuleName);
     html = "<tr>";
-    html += "<td>" + this.name + "</td>";
+    html += "<td id=\"" + this.name + "\">" + this.name + "</td>";
 
     if (visibilityRule == null)
       html += "<td></td>";
