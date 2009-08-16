@@ -7,19 +7,51 @@ var ACTIVITY_PAGE_CLASS = "activity-page";
 // Document ready
 $(document).ready(
   function () {
-    ACTIVITY_DATA = new ActivityData("ENVHOUSE01.xml");
-    ACTIVITY_DATA.addSimpleRulesToComplexRules();
-    ACTIVITY_DATA.displayAll();
-    $("#tabs").tabs();
-    $("#visibility-table").selectable();
-    $("#txtLiveSearch").keyup(
-      function(event) {
-	var searchTerm = this.value;
-	ACTIVITY_DATA.liveSearch(searchTerm);
+    // TODO: Refactor all of this, and change the service textbox to a drop down.
+    $("#select-activity-form").dialog(
+      {
+	bgiframe: true,
+	autoOpen: false,
+	height: 100,
+	modal: true,
+	buttons: {
+	  'OK': function() {
+	    showActivityXml($("input#activity-name").val());
+	    $("input#activity-name").val("");
+	    $(this).dialog("close");
+	  }
+	},
+	close: function() { }
       }
     );
+    $("#select-activity-form").dialog("open");
+    if ($("input#activity-name").val() == "") {
+      hideHeaderAndTabs();
+    }
   }
 );
+
+function showActivityXml(activityId) {
+  var filename = $("input#activity-name").val().toUpperCase() + ".xml";
+  ACTIVITY_DATA = new ActivityData(filename);
+  ACTIVITY_DATA.addSimpleRulesToComplexRules();
+  ACTIVITY_DATA.displayAll();
+  $("#tabs").tabs();
+  $("#visibility-table").selectable();
+  $("#txtLiveSearch").keyup(
+    function(event) {
+      var searchTerm = this.value;
+      ACTIVITY_DATA.liveSearch(searchTerm);
+    }
+  );
+  $("#header").show();
+  $("#tabs").show();
+}
+
+function hideHeaderAndTabs() {
+  $("#header").hide();
+  $("#tabs").hide();
+}
 
 function ActivityData(xmlFilename) {
   this.data = this._initServiceData(xmlFilename);
