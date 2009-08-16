@@ -38,12 +38,11 @@ table tbody tr:hover td
 	color: #009;
 }
 
+
 .simple-rule {
     padding: 1px;
     margin: 1px;
-    border: 1px #ccc solid;
-    border-bottom: 2px #ccc solid;
-    border-right: 2px #ccc solid;
+    background: #eee;
 }
 
 .rule-description {
