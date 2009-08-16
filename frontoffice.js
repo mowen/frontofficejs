@@ -278,7 +278,8 @@ ComplexVisibilityRule.prototype = {
   matchesSearchTerm: function(searchTerm) {
     if (this.RuleName.isIncrementalMatch(searchTerm) ||
 	this.RulesId.isIncrementalMatch(searchTerm) ||
-	this._childMatchesSearchTerm(searchTerm)) {
+	this._simpleRuleMatchesSearchTerm(searchTerm) ||
+        this._controlMatchesSearchTerm(searchTerm)) {
       return true;
     }
     else {
@@ -286,13 +287,17 @@ ComplexVisibilityRule.prototype = {
     }
   },
 
-  _childMatchesSearchTerm: function(searchTerm) {
+  _simpleRuleMatchesSearchTerm: function(searchTerm) {
     for (var simpleRuleId in this.simpleRules) {
       if (this.simpleRules[simpleRuleId].matchesSearchTerm(searchTerm)) {
 	return true;
       }
     }
 
+    return false;
+  },
+
+  _controlMatchesSearchTerm: function(searchTerm) {
     for (var i=0; i < this.controls.length; i++) {
       if (this.controls[i].ControlName.isIncrementalMatch(searchTerm)) {
 	return true;
