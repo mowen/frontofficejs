@@ -3,11 +3,14 @@ var ACTIVITY_DATA;
 var FORM_DEFINITION_DIV = "#form-definition";
 var VISIBILITY_DIV = "#visibility-rules";
 var ACTIVITY_PAGE_CLASS = "activity-page";
+var ACTIVITY_IDS = [ "CHSCISNR01", "ENVFASSR01", "ENVHOUSE01", "ENVPUBSR01", "EPDASSNR01",
+		     "EPDCLWNR01", "TECSTLNR01", "EPDSTCNR01", "ENVTLAPP01" ];
 
 // Document ready
 $(document).ready(
   function () {
-    // TODO: Refactor all of this, and change the service textbox to a drop down.
+    // TODO: Refactor all of this
+    populateActivitiesDropDown();
     $("#select-activity-form").dialog(
       {
 	bgiframe: true,
@@ -16,8 +19,8 @@ $(document).ready(
 	modal: true,
 	buttons: {
 	  'OK': function() {
-	    showActivityXml($("input#activity-name").val());
-	    $("input#activity-name").val("");
+	    showActivityXml($("select#activity-name").val());
+	    $("select#activity-name").val("");
 	    $(this).dialog("close");
 	  }
 	},
@@ -25,14 +28,14 @@ $(document).ready(
       }
     );
     $("#select-activity-form").dialog("open");
-    if ($("input#activity-name").val() == "") {
+    if ($("select#activity-name").val() == "") {
       hideHeaderAndTabs();
     }
   }
 );
 
 function showActivityXml(activityId) {
-  var filename = $("input#activity-name").val().toUpperCase() + ".xml";
+  var filename = $("select#activity-name").val().toUpperCase() + ".xml";
   ACTIVITY_DATA = new ActivityData(filename);
   ACTIVITY_DATA.addSimpleRulesToComplexRules();
   ACTIVITY_DATA.displayAll();
@@ -51,6 +54,13 @@ function showActivityXml(activityId) {
 function hideHeaderAndTabs() {
   $("#header").hide();
   $("#tabs").hide();
+}
+
+function populateActivitiesDropDown() {
+  for (var i=0; i < ACTIVITY_IDS.length; i++) {
+    var activityId = ACTIVITY_IDS[i];
+    $("<option value=\"" + activityId + "\">" + activityId + "</option>").appendTo("#activity-name");
+  }
 }
 
 function ActivityData(xmlFilename) {
