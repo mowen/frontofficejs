@@ -38,6 +38,7 @@ function showActivityXml(activityId) {
   var filename = $("select#activity-name").val().toUpperCase() + ".xml";
   ACTIVITY_DATA = new ActivityData(filename);
   ACTIVITY_DATA.addSimpleRulesToComplexRules();
+  ACTIVITY_DATA.getAffectedControls();
   ACTIVITY_DATA.displayAll();
   $("#tabs").tabs();
   $("#visibility-table").selectable();
@@ -198,6 +199,10 @@ ActivityData.prototype = {
 	rule.simpleRules = complexRuleParser.simpleRules;
       }
     }
+  },
+
+  getAffectedControls: function() {
+    this.affectedControls = new AffectControls();
   },
 
   _visibilityRuleByName: function(ruleName) {
@@ -362,6 +367,50 @@ ComplexVisibilityRule.prototype = {
 
 };
 
+function AffectControls() {
+  var rawAffectControls = ACTIVITY_DATA.data.VisibilityRules.VisibilityObjectsDataSet.AffectControls;
+  this.controls = new Array();
+  for (var i=0; i < rawAffectControls.length; i++) {
+    var control = rawAffectControls[i];
+    this._addControl(control);
+  }
+}
+
+AffectControls.prototype = {
+
+  _controlExists: function(id) {
+    return (this.controls[id] != null);
+  },
+
+  _addControl: function(control) {
+    if (!this._controlExists(control.ControlId)) {
+      this.controls[id] = new AffectControl(control);
+    }
+    this._addAffControl(control.AffControlId);
+    this.controls[id].addAffectControl(controls[control.AffControlId]);
+  },
+
+  _addAffControl: function(affid){
+    if (!this._controlExists(affId)) {
+      this.controls[affId] = new AffectControl(affId);
+    }
+  }
+
+};
+
+function AffectControl(id) {
+  this.id = affectControl.ControlId;
+  this.affectedControls = new Array();
+}
+
+AffectControl.prototype = {
+
+  addAffectControl: function(affectControl) {
+    this.affectedControls.push(affectControl);
+  }
+
+};
+
 function ComplexRuleParser(complexRuleDescription) {
   // Tokens are: "(", ")", "||", and "&&"
   this.TOKEN_REGEXP = new RegExp("^(\\(|\\)|\\|\\||&&)");
@@ -507,7 +556,7 @@ Control.prototype = {
 
     var visibilityRule = ACTIVITY_DATA._visibilityRuleByName(this.visibilityRuleName);
     html = "<tr>";
-    html += "<td id=\"" + this.name + "\">" + this.name + "</td>";
+    html += "<td id=\"" + this.name + "\" title=\"" + this.id + "\">" + this.name + "</td>";
 
     if (visibilityRule == null)
       html += "<td></td>";
