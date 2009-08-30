@@ -383,23 +383,25 @@ AffectControls.prototype = {
   },
 
   _addControl: function(control) {
-    if (!this._controlExists(control.ControlId)) {
-      this.controls[id] = new AffectControl(control);
+    var id = control.ControlId;
+    if (!this._controlExists(id)) {
+      this.controls[id] = new AffectControl(id);
     }
     this._addAffControl(control.AffControlId);
-    this.controls[id].addAffectControl(controls[control.AffControlId]);
+    var affectControl = this.controls[control.AffControlId];
+    this.controls[id].addAffectControl(affectControl);
   },
 
-  _addAffControl: function(affid){
-    if (!this._controlExists(affId)) {
-      this.controls[affId] = new AffectControl(affId);
+  _addAffControl: function(affControlId){
+    if (!this._controlExists(affControlId)) {
+      this.controls[affControlId] = new AffectControl(affControlId);
     }
   }
 
 };
 
 function AffectControl(id) {
-  this.id = affectControl.ControlId;
+  this.id = id;
   this.affectedControls = new Array();
 }
 
