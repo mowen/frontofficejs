@@ -463,7 +463,7 @@ FormDefinition.prototype = {
 
   _displayPage: function(page) {
     var pageHtml = this._renderPage(page);
-    $("#tabs-list").prepend("<li><a href=\"#" + page.id + "\">" + page.name + "</a></li>");
+    $("#tabs-list").append("<li><a href=\"#" + page.id + "\">" + page.name + "</a></li>");
     $("#visibility-rules").before("<div id=\"" + page.id + "\" class=\"" + ACTIVITY_PAGE_CLASS + "\">" + pageHtml + "</div>");
     //this._addLiveSearchToTab(page.id);
   },
