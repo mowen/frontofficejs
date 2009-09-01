@@ -402,6 +402,7 @@ AffectControls.prototype = {
 
 function AffectControl(id) {
   this.id = id;
+  this.name = this._findControlName();
   this.affectedControls = new Array();
 }
 
@@ -409,6 +410,19 @@ AffectControl.prototype = {
 
   addAffectControl: function(affectControl) {
     this.affectedControls.push(affectControl);
+  },
+
+  // TODO: Is there a faster way to do this?
+  _findControlName: function() {
+    var control;
+    var controls = ACTIVITY_DATA.data.VisibilityRules.VisibilityObjectsDataSet.Controls;
+    for (var i=0; i < controls.length; i++) {
+      control = controls[i];
+      if (control.ControlId == this.id) {
+	return control.ControlName;
+      }
+    }
+    return "";
   }
 
 };
