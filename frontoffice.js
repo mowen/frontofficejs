@@ -2,6 +2,7 @@ var ACTIVITY_DATA;
 
 var FORM_DEFINITION_DIV = "#form-definition";
 var VISIBILITY_DIV = "#visibility-rules";
+var AFFECTED_CONTROLS_DIV = "#affected-controls";
 var ACTIVITY_PAGE_CLASS = "activity-page";
 var ACTIVITY_IDS = [ "CHSCISNR01", "ENVFASSR01", "ENVHOUSE01", "ENVPUBSR01", "EPDASSNR01",
 		     "EPDCLWNR01", "TECSTLNR01", "EPDSTCNR01", "ENVTLAPP01" ];
@@ -77,6 +78,7 @@ ActivityData.prototype = {
   displayAll: function() {
     this._displayHeader();
     this._displayVisibility();
+    this._displayAffectedControls();
     this._displayPages();
   },
 
@@ -130,6 +132,14 @@ ActivityData.prototype = {
     tableHtml += "</tbody></table>";
 
     $(tableHtml).appendTo(VISIBILITY_DIV);
+  },
+
+  _displayAffectedControls: function() {
+    var affectedControlsHtml = "<pre>";
+    affectedControlsHtml += this.affectedControls.emitDigraph();
+    affectedControlsHtml += "</pre>";
+
+    $(affectedControlsHtml).appendTo(AFFECTED_CONTROLS_DIV);
   },
 
   _displayPages: function() {
@@ -396,6 +406,23 @@ AffectControls.prototype = {
     if (!this._controlExists(affControlId)) {
       this.controls[affControlId] = new AffectControl(affControlId);
     }
+  },
+
+  emitDigraph: function() {
+    var digraph = "";
+
+    digraph += "digraph G {\n";
+    var control;
+    for (controlId in this.controls) {
+      control = this.controls[controlId];
+      digraph += "\t" + control.id + " [label=\"" + control.name + "\"];\n";
+      for (var i=0; i < control.affectedControls.length; i++) {
+	digraph += "\t" + control.id + " -> " + control.affectedControls[i].id + ";\n";
+      }
+    }
+    digraph += "}";
+
+    return digraph;
   }
 
 };
