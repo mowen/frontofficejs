@@ -408,6 +408,18 @@ AffectControls.prototype = {
     }
   },
 
+  /**
+   * The digraph becomes impossible to read if we include everything, so
+   * just limit via this function.
+   */
+  _includeControlInDigraph: function(control) {
+    return control.id.match(/^table/);
+  },
+
+  /**
+   * Output a directed graph in the "dot" language, to be interpreted by
+   * GraphViz.
+   */
   emitDigraph: function() {
     var digraph = "";
 
@@ -415,9 +427,13 @@ AffectControls.prototype = {
     var control;
     for (controlId in this.controls) {
       control = this.controls[controlId];
-      digraph += "\t" + control.id + " [label=\"" + control.name + "\"];\n";
-      for (var i=0; i < control.affectedControls.length; i++) {
-	digraph += "\t" + control.id + " -> " + control.affectedControls[i].id + ";\n";
+      if (this._includeControlInDigraph(control)) {
+	digraph += "\t" + control.id + " [label=\"" + control.name + "\"];\n";
+	for (var i=0; i < control.affectedControls.length; i++) {
+	  if (this._includeControlInDigraph(control.affectedControls[i])) {
+	    digraph += "\t" + control.id + " -> " + control.affectedControls[i].id + ";\n";
+	  }
+	}
       }
     }
     digraph += "}";
