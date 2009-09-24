@@ -612,9 +612,9 @@ Control.prototype = {
   },
 
   matchesSearchTerm: function(searchTerm) {
-    if (this.id == searchTerm ||
-	this.name == searchTerm ||
-	this.visibilityRuleName == searchTerm ||
+    if (this.id.isIncrementalMatch(searchTerm) ||
+	this.name.isIncrementalMatch(searchTerm) ||
+	this.visibilityRuleName.isIncrementalMatch(searchTerm) ||
 	this._childMatchesSearchTerm(searchTerm)) {
       return true;
     }
