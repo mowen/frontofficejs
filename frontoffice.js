@@ -5,7 +5,8 @@ var VISIBILITY_DIV = "#visibility-rules";
 var AFFECTED_CONTROLS_DIV = "#affected-controls";
 var ACTIVITY_PAGE_CLASS = "activity-page";
 var ACTIVITY_IDS = [ "CHSCISNR01", "ENVFASSR01", "ENVHOUSE01", "ENVPUBSR01", "EPDASSNR01",
-		     "EPDCLWNR01", "TECSTLNR01", "EPDSTCNR01", "ENVTLAPP01" ];
+		     "EPDCLWNR01", "TECSTLNR01", "EPDSTCNR01", "ENVTLAPP01", "ENVPESCR01",
+		     "ENVPESSR01", "ENVDOGNR01" ];
 
 // Document ready
 $(document).ready(
