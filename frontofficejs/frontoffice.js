@@ -11,30 +11,42 @@ var ACTIVITY_IDS = [ "CHSCISNR01", "ENVFASSR01", "ENVHOUSE01", "ENVPUBSR01", "EP
 // Document ready
 $(document).ready(
   function () {
-    // TODO: Refactor all of this
-    populateActivitiesDropDown();
-    $("#select-activity-form").dialog(
-      {
-	bgiframe: true,
-	autoOpen: false,
-	height: 100,
-	modal: true,
-	buttons: {
-	  'OK': function() {
-	    showActivityXml($("select#activity-name").val());
-	    $("select#activity-name").val("");
-	    $(this).dialog("close");
-	  }
-	},
-	close: function() { }
-      }
-    );
-    $("#select-activity-form").dialog("open");
-    if ($("select#activity-name").val() == "") {
-      hideHeaderAndTabs();
-    }
+    showActivitiesDialog();
   }
 );
+
+function showActivitiesDialog() {
+  populateActivitiesDropDown();
+  $("#select-activity-form").dialog(
+    {
+      bgiframe: true,
+      autoOpen: false,
+      height: 100,
+      modal: true,
+      buttons: {
+        'OK': function() {
+	  showActivityXml($("select#activity-name").val());
+	  $("select#activity-name").val("");
+	  $(this).dialog("close");
+	}
+      },
+      close: function() { }
+    }
+  );
+  
+  $("#select-activity-form").dialog("open");
+  
+  if ($("select#activity-name").val() == "") {
+    hideHeaderAndTabs();
+  }
+}
+
+function populateActivitiesDropDown() {
+  for (var i=0; i < ACTIVITY_IDS.length; i++) {
+    var activityId = ACTIVITY_IDS[i];
+    $("<option value=\"" + activityId + "\">" + activityId + "</option>").appendTo("#activity-name");
+  }
+}
 
 function showActivityXml(activityId) {
   var filename = $("select#activity-name").val().toUpperCase() + ".xml";
@@ -56,13 +68,6 @@ function showActivityXml(activityId) {
 function hideHeaderAndTabs() {
   $("#header").hide();
   $("#tabs").hide();
-}
-
-function populateActivitiesDropDown() {
-  for (var i=0; i < ACTIVITY_IDS.length; i++) {
-    var activityId = ACTIVITY_IDS[i];
-    $("<option value=\"" + activityId + "\">" + activityId + "</option>").appendTo("#activity-name");
-  }
 }
 
 function ActivityData(xmlFilename) {
