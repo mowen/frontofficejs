@@ -50,7 +50,4 @@ table tbody tr:hover td
     font-size: 12px;
 }
 
-#visibility-table .ui-selecting { background: #FECA40; }
-#visibility-table .ui-selected { background: #F39814; color: white; }
 #visibility-table { margin: 0; padding: 0; }
-/* #selectable tr { margin: 3px; padding: 0.4em; font-size: 1.4em; height: 18px; } */
