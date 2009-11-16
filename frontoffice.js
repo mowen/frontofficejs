@@ -43,7 +43,6 @@ function showActivityXml(activityId) {
   ACTIVITY_DATA.getAffectedControls();
   ACTIVITY_DATA.displayAll();
   $("#tabs").tabs();
-  $("#visibility-table").selectable();
   $("#txtLiveSearch").keyup(
     function(event) {
       var searchTerm = this.value;
