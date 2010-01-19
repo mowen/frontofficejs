@@ -33,16 +33,19 @@ table td
     padding: 6px 8px;
 }
 
-table tbody tr:hover td
-{
-	color: #009;
+p.page-visibility-rule {
+    background: #fff;
+    padding: 5px;
 }
-
 
 .simple-rule {
     padding: 1px;
     margin: 1px;
     background: #eee;
+}
+
+.simple-rule:hover {
+    border: 1px solid #ddd;
 }
 
 .rule-description {

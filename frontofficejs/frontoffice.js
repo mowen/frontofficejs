@@ -1,14 +1,11 @@
 var ACTIVITY_DATA;
+var XML_STRING;
 
 var FORM_DEFINITION_DIV = "#form-definition";
 var VISIBILITY_DIV = "#visibility-rules";
 var AFFECTED_CONTROLS_DIV = "#affected-controls";
 var ACTIVITY_PAGE_CLASS = "activity-page";
-var ACTIVITY_IDS = [ "CHSCISNR01", "ENVFASSR01", "ENVHOUSE01", "ENVPUBSR01", "EPDASSNR01",
-		     "EPDCLWNR01", "TECSTLNR01", "EPDSTCNR01", "ENVTLAPP01", "ENVPESCR01",
-		     "ENVPESSR01", "ENVDOGNR01" ];
 
-// Document ready
 $(document).ready(
   function () {
     showActivitiesDialog();
@@ -16,7 +13,6 @@ $(document).ready(
 );
 
 function showActivitiesDialog() {
-  populateActivitiesDropDown();
   $("#select-activity-form").dialog(
     {
       bgiframe: true,
@@ -25,44 +21,43 @@ function showActivitiesDialog() {
       modal: true,
       buttons: {
         'OK': function() {
-	  showActivityXml($("select#activity-name").val());
-	  $("select#activity-name").val("");
-	  $(this).dialog("close");
+	  var activityId = $("input#activity-name").val();
+	  $("input#activity-name").val("");
+	  showActivityXml(activityId);
+	  if (ACTIVITY_DATA.hasData()) {
+	    $(this).dialog("close");
+	  }
 	}
       },
       close: function() { }
     }
   );
-  
+
   $("#select-activity-form").dialog("open");
-  
-  if ($("select#activity-name").val() == "") {
+
+  if ($("input#activity-name").val() == "") {
     hideHeaderAndTabs();
   }
 }
 
-function populateActivitiesDropDown() {
-  for (var i=0; i < ACTIVITY_IDS.length; i++) {
-    var activityId = ACTIVITY_IDS[i];
-    $("<option value=\"" + activityId + "\">" + activityId + "</option>").appendTo("#activity-name");
-  }
-}
-
 function showActivityXml(activityId) {
-  var filename = $("select#activity-name").val().toUpperCase() + ".xml";
+  var filename = activityId.toUpperCase() + ".xml";
   ACTIVITY_DATA = new ActivityData(filename);
-  ACTIVITY_DATA.addSimpleRulesToComplexRules();
-  ACTIVITY_DATA.getAffectedControls();
-  ACTIVITY_DATA.displayAll();
-  $("#tabs").tabs();
-  $("#txtLiveSearch").keyup(
-    function(event) {
-      var searchTerm = this.value;
-      ACTIVITY_DATA.liveSearch(searchTerm);
-    }
-  );
-  $("#header").show();
-  $("#tabs").show();
+
+  if (ACTIVITY_DATA.hasData()) {
+    ACTIVITY_DATA.addSimpleRulesToComplexRules();
+    ACTIVITY_DATA.getAffectedControls();
+    ACTIVITY_DATA.displayAll();
+    $("#tabs").tabs();
+    $("#txtLiveSearch").keyup(
+      function(event) {
+	var searchTerm = this.value;
+	ACTIVITY_DATA.liveSearch(searchTerm);
+      }
+    );
+    $("#header").show();
+    $("#tabs").show();
+  }
 }
 
 function hideHeaderAndTabs() {
@@ -72,9 +67,14 @@ function hideHeaderAndTabs() {
 
 function ActivityData(xmlFilename) {
   this.data = this._initServiceData(xmlFilename);
-  this.visibilityRules = this._initVisibilityRules();
-  this.formDefinition = this._initFormDefinition();
-  this._addControlsToVisibilityRules();
+  if (this.data != null) {
+    this.visibilityRules = this._initVisibilityRules();
+    this.formDefinition = this._initFormDefinition();
+    this._addControlsToVisibilityRules();
+  }
+  else {
+    alert("A file with the name '" + xmlFilename + "' couldn't be found.");
+  }
 }
 
 // TODO: Implement eachVisibilityRule(func) and eachControl(func) Visitor functions.
@@ -83,13 +83,17 @@ ActivityData.prototype = {
   displayAll: function() {
     this._displayHeader();
     this._displayVisibility();
-    this._displayAffectedControls();
+    //this._displayAffectedControls();
     this._displayPages();
   },
 
   liveSearch: function(searchTerm) {
     this._searchVisibility(searchTerm);
     this._searchFormDefinition(searchTerm);
+  },
+
+  hasData: function() {
+    return (this.data != null);
   },
 
   _searchVisibility: function(searchTerm) {
@@ -152,16 +156,28 @@ ActivityData.prototype = {
   },
 
   _loadXmlDoc: function(filename) {
-    var xmlDoc;
-    xmlDoc = new window.XMLHttpRequest();
-    xmlDoc.open("GET", filename, false);
-    xmlDoc.send("");
-    return xmlDoc.responseText;
+    $.ajax({
+      url: filename,
+      dataType: "text",
+      async: false,
+      success: function(data){
+	XML_STRING = data;
+      },
+      error: function() {
+	XML_STRING = null;
+      }
+   });
   },
 
   _initServiceData: function(filename) {
-    var xml = this._loadXmlDoc(filename);
-    return $.xml2json(xml);
+    this._loadXmlDoc(filename); // Populates XML_STRING
+
+    if (XML_STRING == null) {
+      return null;
+    }
+    else {
+      return $.xml2json(XML_STRING);
+    }
   },
 
   _initFormDefinition: function() {
@@ -180,12 +196,16 @@ ActivityData.prototype = {
 
     // The XML to JSON converter will not use an Array if there is only a single child.
     // TODO: Extract this check, as it is needed by the pages too.
-    if (complexRules.length != undefined) {
-      for (i = 0; i < complexRules.length; i++)
-	rules[complexRules[i].RulesMasterId.toString()] = new ComplexVisibilityRule(complexRules[i]);
+    if (complexRules != undefined) {
+      if (complexRules.length != undefined) {
+	for (i = 0; i < complexRules.length; i++) {
+	  rules[complexRules[i].RulesMasterId.toString()] = new ComplexVisibilityRule(complexRules[i]);
+	}
+      }
+      else {
+	rules[complexRules.RulesMasterId.toString()] = new ComplexVisibilityRule(complexRules);
+      }
     }
-    else
-      rules[complexRules.RulesMasterId.toString()] = new ComplexVisibilityRule(complexRules);
 
     return rules;
   },
@@ -197,7 +217,7 @@ ActivityData.prototype = {
     for (var i = 0; i < controls.length; i++) {
       control = controls[i];
       if (control.VisibleOnLoad == "N") {
-	rule = this._visibilityRuleByName(control.VisibilityRuleName);
+	rule = this.visibilityRuleByName(control.VisibilityRuleName);
 	rule.addControl(control);
       }
     }
@@ -220,12 +240,18 @@ ActivityData.prototype = {
     this.affectedControls = new AffectControls();
   },
 
-  _visibilityRuleByName: function(ruleName) {
+  visibilityRuleByName: function(ruleName) {
     for (var ruleId in this.visibilityRules) {
       if (this.visibilityRules[ruleId].RuleName == ruleName)
 	return this.visibilityRules[ruleId];
     }
     return null;
+  },
+
+  searchForRule: function(ruleId) {
+    $("#txtLiveSearch").val(ruleId);
+    ACTIVITY_DATA.liveSearch(ruleId);
+    $("#tabs").tabs('select', VISIBILITY_DIV);
   }
 
 };
@@ -250,14 +276,21 @@ SimpleVisibilityRule.prototype = {
     html += "<td>" + this.RuleName + "</td>";
     html += "<td colspan=\"3\" class=\"rule-description\" id=\"" + this.RuleName + "\">" + this.emitRuleDescription() + "</td>";
     html += "<td>";
-    html += this._emitControlsHtml();
+    html += this._emitControlsCSV();
     html += "</td>";
     html += "</tr>";
     return html;
   },
 
+  // TODO: Don't add the onClick functions here,
+  // add them after the HTML has been rendered
   emitRuleDescription: function() {
-    var ruleHtml = "<span title=\"Id: " + this.RulesId + ", Name: " + this.RuleName + "\" class=\"simple-rule\">";
+    var affectedControls = this._emitControlsCSV();
+    var ruleHtml = "<span title=\"Id: " + this.RulesId
+                 + ", Name: " + this.RuleName
+                 + ", Controls: " + affectedControls
+                 + "\" class=\"simple-rule\" "
+                 + "onClick=\"javascript:ACTIVITY_DATA.searchForRule('" + this.RulesId + "');\">";
     ruleHtml += this.ControlName + "&nbsp;" + this._convertOperator(this.Operator) + "&nbsp;" + this.Val;
     ruleHtml += "</span>";
     return ruleHtml;
@@ -274,7 +307,7 @@ SimpleVisibilityRule.prototype = {
     return newOperator;
   },
 
-  _emitControlsHtml: function() {
+  _emitControlsCSV: function() {
     var html = "";
 
     for (var i = 0; i < this.controls.length; i++) {
@@ -327,7 +360,7 @@ ComplexVisibilityRule.prototype = {
     html += "<td>" + this.RuleName + "</td>";
     html += "<td colspan=\"3\" class=\"rule-description\" id=\"" + this.RuleName + "\">" + this.emitRuleDescription() + "</td>";
     html += "<td>";
-    html += this._emitControlsHtml();
+    html += this._emitControlsCSV();
     html += "</td>";
     html += "</tr>";
     return html;
@@ -337,7 +370,7 @@ ComplexVisibilityRule.prototype = {
     return this.RulesDescription;
   },
 
-  _emitControlsHtml: function() {
+  _emitControlsCSV: function() {
     var html = "";
 
     for (var i = 0; i < this.controls.length; i++) {
@@ -582,7 +615,11 @@ FormDefinition.prototype = {
   },
 
   _renderPage: function(page) {
-    var html = "<table>";
+    var html = "";
+
+    html += this._renderRuleDescription(page);
+
+    html += "<table>";
     html += "<thead><tr><th>Name</th><th>Visibility</th></tr></thead>";
     html += "<tbody>";
 
@@ -594,6 +631,20 @@ FormDefinition.prototype = {
     html += "</table>";
 
     return html;
+  },
+
+  _renderRuleDescription: function(page) {
+    var ruleDescription = "";
+
+    if (page.visibilityRuleName) {
+      var rule = ACTIVITY_DATA.visibilityRuleByName(page.visibilityRuleName);
+      ruleDescription = rule.emitRuleDescription();
+    }
+    else {
+      ruleDescription = "None";
+    }
+
+    return "<p class=\"page-visibility-rule\">Visibility Rule:&nbsp;" + ruleDescription + "</p>";
   }
 
 };
@@ -618,7 +669,7 @@ Control.prototype = {
   render: function() {
     var html;
 
-    var visibilityRule = ACTIVITY_DATA._visibilityRuleByName(this.visibilityRuleName);
+    var visibilityRule = ACTIVITY_DATA.visibilityRuleByName(this.visibilityRuleName);
     html = "<tr>";
     html += "<td id=\"" + this.name + "\" title=\"" + this.id + "\">" + this.name + "</td>";
 
